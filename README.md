@@ -1,27 +1,21 @@
 # Ilia Postolaki — CV
 
-Personal CV site for [Ilia Postolaki](https://github.com/ipostolaki): a static HTML page, a printable PDF, and an interactive career graph.
+This repository is a static CV site: an HTML page, a printable PDF, and an interactive career graph. GitHub Pages serves the site at https://ipostolaki.github.io/ilia-cv/ from the master branch, using the repository root.
 
-**Live site:** [https://ipostolaki.github.io/ilia-cv/](https://ipostolaki.github.io/ilia-cv/)  
-Served from GitHub Pages (`master`, repo root). There is no custom domain.
+## index.html
 
-## Main page
+index.html is the CV. styles.css next to it provides the layout and colours. The page header includes a control that downloads cv_ilia_postolaki.pdf from the same directory.
 
-[`index.html`](index.html) is the CV. It is styled by [`styles.css`](styles.css) (Solarized warm palette). The header links to a download of [`cv_ilia_postolaki.pdf`](cv_ilia_postolaki.pdf).
+## graph/
 
-## Career graph
+graph/ is a second page, opened as graph/index.html (https://ipostolaki.github.io/ilia-cv/graph/). It shows companies and technologies as a node-edge network in the browser (Cytoscape.js). Roles are the connections between company and technology nodes. Controls on that page adjust the layout. The graph is not part of the printed PDF.
 
-[`graph/`](graph/) is a separate page at [https://ipostolaki.github.io/ilia-cv/graph/](https://ipostolaki.github.io/ilia-cv/graph/). It draws companies and technologies as a Cytoscape.js network (roles are the edges). Layout sliders on the page adjust the force-directed layout. The graph is not used when printing the PDF.
+## html_to_pdf.py
 
-## PDF script
+html_to_pdf.py generates cv_ilia_postolaki.pdf from index.html. From the repository root, run: python html_to_pdf.py
 
-[`html_to_pdf.py`](html_to_pdf.py) prints the CV to A4 with a flat paper background. It serves the folder locally, opens it in headless Chromium via Playwright, and writes `cv_ilia_postolaki.pdf`.
-
-```bash
-# Playwright + Chromium from the Astroswing venv on this machine
-/root/astroswing/.venv/bin/python html_to_pdf.py
-```
+The script starts a local HTTP server for this directory, opens the CV in headless Chromium through Playwright, and writes an A4 PDF with a flat paper background. Playwright and Chromium must be available; the Chromium path is set in the script itself. Output is always cv_ilia_postolaki.pdf in the repository root.
 
 ## robots.txt
 
-[`robots.txt`](robots.txt) sends `Disallow: /` to well-behaved crawlers so the site is not indexed.
+robots.txt tells well-behaved crawlers not to index the site (User-agent: all, Disallow: /).
