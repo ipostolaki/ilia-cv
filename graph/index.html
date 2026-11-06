@@ -119,17 +119,101 @@
       color: var(--muted);
     }
 
-    #cy {
+    .graph-wrap {
+      position: relative;
       flex: 1 1 auto;
+      display: flex;
       width: min(72rem, calc(100% - 1.5rem));
       min-height: 28rem;
       margin: 0.9rem auto;
+    }
+
+    #cy {
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 28rem;
       background:
         linear-gradient(180deg, #fffdf6 0%, var(--base3) 18%, #f8efd8 100%);
       border: 1px solid #e8dfc8;
       box-shadow:
         0 1px 0 #fffaf0 inset,
         0 18px 48px rgb(7 54 66 / 12%);
+    }
+
+    .layout-panel {
+      position: absolute;
+      top: 0.7rem;
+      right: 0.7rem;
+      z-index: 2;
+      width: 15.5rem;
+      padding: 0.45rem 0.7rem 0.65rem;
+      border: 1px solid rgb(181 137 0 / 35%);
+      border-radius: 10px;
+      background: rgb(253 246 227 / 94%);
+      box-shadow: 0 8px 24px rgb(7 54 66 / 10%);
+      font-family: "Source Sans 3", "Segoe UI", sans-serif;
+      font-size: 0.78rem;
+    }
+
+    .layout-panel summary {
+      cursor: pointer;
+      color: var(--yellow);
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      list-style: none;
+    }
+
+    .layout-panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .layout-panel label {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.1rem 0.5rem;
+      margin-top: 0.55rem;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .layout-panel label span {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.7rem;
+    }
+
+    .layout-panel output {
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    .layout-panel input[type="range"] {
+      grid-column: 1 / -1;
+      width: 100%;
+      margin: 0.15rem 0 0;
+      accent-color: var(--orange);
+    }
+
+    .layout-panel button {
+      display: inline-flex;
+      margin-top: 0.7rem;
+      padding: 0.28rem 0.7rem;
+      border: 1px solid rgb(181 137 0 / 35%);
+      border-radius: 999px;
+      background: var(--base2);
+      color: var(--base02);
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .layout-panel button:hover {
+      color: var(--orange);
+      border-color: var(--yellow);
     }
 
     #detail {
@@ -165,10 +249,17 @@
         font-size: 1.45rem;
       }
 
+      .graph-wrap,
       #cy {
         width: 100%;
-        margin: 0.6rem 0;
         min-height: 70vh;
+      }
+
+      .graph-wrap {
+        margin: 0.6rem 0;
+      }
+
+      #cy {
         border-left: 0;
         border-right: 0;
       }
@@ -195,7 +286,45 @@
     </div>
     <p id="detail">Select a company or technology.</p>
   </header>
-  <div id="cy" role="img" aria-label="Interactive graph of companies and technologies"></div>
+  <div class="graph-wrap">
+    <div id="cy" role="img" aria-label="Interactive graph of companies and technologies"></div>
+    <aside class="layout-panel">
+      <details open>
+        <summary>Layout</summary>
+        <label>
+          Spring length
+          <output for="idealEdgeLength" id="idealEdgeLength-out"></output>
+          <span>idealEdgeLength</span>
+          <input id="idealEdgeLength" type="range" min="20" max="280" step="1">
+        </label>
+        <label>
+          Repulsion
+          <output for="nodeRepulsion" id="nodeRepulsion-out"></output>
+          <span>nodeRepulsion</span>
+          <input id="nodeRepulsion" type="range" min="500" max="40000" step="100">
+        </label>
+        <label>
+          Gravity
+          <output for="gravity" id="gravity-out"></output>
+          <span>gravity</span>
+          <input id="gravity" type="range" min="0" max="2" step="0.05">
+        </label>
+        <label>
+          Node spacing
+          <output for="padding" id="padding-out"></output>
+          <span>padding</span>
+          <input id="padding" type="range" min="0" max="80" step="1">
+        </label>
+        <label>
+          Damping
+          <output for="coolingFactor" id="coolingFactor-out"></output>
+          <span>coolingFactor (cose has no damping)</span>
+          <input id="coolingFactor" type="range" min="0.8" max="0.999" step="0.001">
+        </label>
+        <button type="button" id="layout-reset">Reset</button>
+      </details>
+    </aside>
+  </div>
   <footer>
     <a href="../index.html">CV</a>
     <a href="mailto:ilia.postolaki@gmail.com">ilia.postolaki@gmail.com</a>
@@ -270,7 +399,7 @@
       companyNodes.push({
         data: {
           id: 'c:' + job.company,
-          label: job.company,
+          label: job.company + '\n' + job.role,
           kind: 'company',
           role: job.role,
           dates: job.dates,
@@ -319,26 +448,77 @@
 
     const elements = companyNodes.concat(techNodes, edgeList);
 
+    const LAYOUT_DEFAULTS = {
+      idealEdgeLength: 110,
+      nodeRepulsion: 12000,
+      gravity: 0.35,
+      padding: 28,
+      coolingFactor: 0.99
+    };
+
+    const layoutControls = {
+      idealEdgeLength: { el: document.getElementById('idealEdgeLength'), out: document.getElementById('idealEdgeLength-out'), parse: Number },
+      nodeRepulsion: { el: document.getElementById('nodeRepulsion'), out: document.getElementById('nodeRepulsion-out'), parse: Number },
+      gravity: { el: document.getElementById('gravity'), out: document.getElementById('gravity-out'), parse: Number },
+      padding: { el: document.getElementById('padding'), out: document.getElementById('padding-out'), parse: Number },
+      coolingFactor: { el: document.getElementById('coolingFactor'), out: document.getElementById('coolingFactor-out'), parse: Number }
+    };
+
+    function formatParam(key, value) {
+      if (key === 'gravity' || key === 'coolingFactor') return Number(value).toFixed(key === 'gravity' ? 2 : 3);
+      return String(Math.round(value));
+    }
+
+    function readLayoutParams() {
+      const params = {};
+      Object.keys(layoutControls).forEach((key) => {
+        params[key] = layoutControls[key].parse(layoutControls[key].el.value);
+      });
+      return params;
+    }
+
+    function writeLayoutParams(params) {
+      Object.keys(layoutControls).forEach((key) => {
+        layoutControls[key].el.value = params[key];
+        layoutControls[key].out.value = formatParam(key, params[key]);
+      });
+    }
+
+    function coseOptions(params) {
+      return {
+        name: 'cose',
+        animate: false,
+        randomize: false,
+        nodeOverlap: 48,
+        edgeElasticity: 0.35,
+        numIter: 2500,
+        initialTemp: 200,
+        minTemp: 1,
+        idealEdgeLength: params.idealEdgeLength,
+        nodeRepulsion: params.nodeRepulsion,
+        gravity: params.gravity,
+        padding: params.padding,
+        coolingFactor: params.coolingFactor
+      };
+    }
+
+    let layoutRun = null;
+
+    function runLayout(params) {
+      if (layoutRun) layoutRun.stop();
+      layoutRun = cy.layout(coseOptions(params));
+      layoutRun.run();
+    }
+
+    writeLayoutParams(LAYOUT_DEFAULTS);
+
     const cy = window.cy = cytoscape({
       container: document.getElementById('cy'),
       elements: elements,
       minZoom: 0.4,
       maxZoom: 2.4,
       wheelSensitivity: 0.25,
-      layout: {
-        name: 'cose',
-        animate: false,
-        randomize: false,
-        padding: 28,
-        nodeRepulsion: 12000,
-        nodeOverlap: 48,
-        idealEdgeLength: 110,
-        edgeElasticity: 0.35,
-        gravity: 0.35,
-        numIter: 2500,
-        initialTemp: 200,
-        minTemp: 1
-      },
+      layout: coseOptions(LAYOUT_DEFAULTS),
       style: [
         {
           selector: 'node',
@@ -369,9 +549,11 @@
             'font-weight': 500,
             'text-valign': 'center',
             'text-halign': 'center',
-            width: 148,
-            height: 44,
-            'text-max-width': 136
+            width: 176,
+            height: 62,
+            'text-max-width': 164,
+            'text-wrap': 'wrap',
+            'text-line-height': 1.15
           }
         },
         {
@@ -429,7 +611,7 @@
 
     function summarizeNode(node) {
       if (node.data('kind') === 'company') {
-        const job = companyMeta[node.data('label')];
+        const job = companyMeta[node.id().slice(2)];
         return '<strong>' + job.company + '</strong> · ' + job.role + ' · ' + job.dates;
       }
       const degree = node.data('degree');
@@ -449,6 +631,19 @@
 
     cy.on('tap', function (evt) {
       if (evt.target === cy) reset();
+    });
+
+    Object.keys(layoutControls).forEach((key) => {
+      layoutControls[key].el.addEventListener('input', function () {
+        const params = readLayoutParams();
+        layoutControls[key].out.value = formatParam(key, params[key]);
+        runLayout(params);
+      });
+    });
+
+    document.getElementById('layout-reset').addEventListener('click', function () {
+      writeLayoutParams(LAYOUT_DEFAULTS);
+      runLayout(LAYOUT_DEFAULTS);
     });
   </script>
 </body>
