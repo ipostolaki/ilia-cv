@@ -80,8 +80,17 @@ a:hover {
   box-shadow: 0 3px 0 var(--base2);
 }
 
+.masthead-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 1rem;
+  margin-bottom: 0.4rem;
+}
+
 .masthead h1 {
-  margin: 0 0 0.4rem;
+  margin: 0;
   color: var(--base02);
   font-family: Fraunces, Georgia, serif;
   font-optical-sizing: auto;
@@ -89,6 +98,33 @@ a:hover {
   font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.05;
+}
+
+.pdf-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.7rem;
+  border: 1px solid rgb(181 137 0 / 35%);
+  border-radius: 999px;
+  background: var(--base2);
+  color: var(--base02);
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pdf-download:hover {
+  color: var(--orange);
+  border-color: var(--yellow);
+  text-decoration: none;
+}
+
+.pdf-download svg {
+  flex-shrink: 0;
 }
 
 .role,
@@ -382,6 +418,10 @@ a:hover {
   .masthead {
     margin-bottom: 1.1rem;
     padding-bottom: 0.9rem;
+  }
+
+  .pdf-download {
+    display: none;
   }
 
   .masthead h1 {

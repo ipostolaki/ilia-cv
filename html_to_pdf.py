@@ -9,7 +9,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent
 CHROME = Path("/root/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome")
-OUT = ROOT / "portfolio.pdf"
+OUT = ROOT / "cv_ilia_postolaki.pdf"
 PAPER = "#fdf6e3"
 PRINT_CSS = f"""
 @page {{
