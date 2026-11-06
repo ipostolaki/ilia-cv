@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ilia Postolaki — Career graph</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@500;600&family=Source+Serif+4:opsz,ital,wght@8..60,0,400;8..60,0,600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.31.0/cytoscape.min.js"></script>
+  <style>
+    :root {
+      --base02: #073642;
+      --base00: #657b83;
+      --base2: #eee8d5;
+      --base3: #fdf6e3;
+      --yellow: #b58900;
+      --orange: #cb4b16;
+      --cyan: #2aa198;
+      --paper: var(--base3);
+      --desk: #e4dcc8;
+      --ink: var(--base02);
+      --muted: var(--base00);
+      --link: var(--orange);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background-color: var(--desk);
+      background-image:
+        radial-gradient(ellipse 90% 60% at 50% 0%, #f6edd4 0%, transparent 70%),
+        repeating-linear-gradient(135deg, rgb(181 137 0 / 4%) 0 1px, transparent 1px 14px);
+      color: var(--ink);
+      font-family: "Source Serif 4", Georgia, serif;
+    }
+
+    a {
+      color: var(--link);
+      text-decoration-color: rgb(181 137 0 / 45%);
+      text-underline-offset: 0.18em;
+    }
+
+    a:hover {
+      color: var(--yellow);
+      text-decoration-color: var(--yellow);
+    }
+
+    .masthead {
+      flex: 0 0 auto;
+      margin: 1.25rem auto 0;
+      padding: 0 1.25rem 0.85rem;
+      width: min(72rem, calc(100% - 1.5rem));
+      border-bottom: 2px solid var(--yellow);
+      box-shadow: 0 3px 0 var(--base2);
+    }
+
+    h1 {
+      margin: 0 0 0.2rem;
+      font-family: Fraunces, Georgia, serif;
+      font-size: 1.85rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .lede {
+      margin: 0 0 0.7rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      color: var(--ink);
+      font-family: "Source Sans 3", "Segoe UI", sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+
+    .swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .swatch i {
+      display: inline-block;
+      width: 0.85rem;
+      height: 0.85rem;
+      border: 1px solid rgb(7 54 66 / 18%);
+    }
+
+    .swatch .company {
+      border-radius: 3px;
+      background: var(--orange);
+    }
+
+    .swatch .tech {
+      border-radius: 999px;
+      background: var(--cyan);
+    }
+
+    .hint {
+      color: var(--muted);
+    }
+
+    .graph-wrap {
+      position: relative;
+      flex: 1 1 auto;
+      display: flex;
+      width: min(72rem, calc(100% - 1.5rem));
+      min-height: 28rem;
+      margin: 0.9rem auto;
+    }
+
+    #cy {
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 28rem;
+      background:
+        linear-gradient(180deg, #fffdf6 0%, var(--base3) 18%, #f8efd8 100%);
+      border: 1px solid #e8dfc8;
+      box-shadow:
+        0 1px 0 #fffaf0 inset,
+        0 18px 48px rgb(7 54 66 / 12%);
+    }
+
+    .layout-panel {
+      position: absolute;
+      top: 0.7rem;
+      right: 0.7rem;
+      z-index: 2;
+      width: 15.5rem;
+      padding: 0.45rem 0.7rem 0.65rem;
+      border: 1px solid rgb(181 137 0 / 35%);
+      border-radius: 10px;
+      background: rgb(253 246 227 / 94%);
+      box-shadow: 0 8px 24px rgb(7 54 66 / 10%);
+      font-family: "Source Sans 3", "Segoe UI", sans-serif;
+      font-size: 0.78rem;
+    }
+
+    .layout-panel summary {
+      cursor: pointer;
+      color: var(--yellow);
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      list-style: none;
+    }
+
+    .layout-panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .layout-panel label {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.1rem 0.5rem;
+      margin-top: 0.55rem;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .layout-panel label span {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.7rem;
+    }
+
+    .layout-panel output {
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    .layout-panel input[type="range"] {
+      grid-column: 1 / -1;
+      width: 100%;
+      margin: 0.15rem 0 0;
+      accent-color: var(--orange);
+    }
+
+    .layout-panel button {
+      display: inline-flex;
+      margin-top: 0.7rem;
+      padding: 0.28rem 0.7rem;
+      border: 1px solid rgb(181 137 0 / 35%);
+      border-radius: 999px;
+      background: var(--base2);
+      color: var(--base02);
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .layout-panel button:hover {
+      color: var(--orange);
+      border-color: var(--yellow);
+    }
+
+    #detail {
+      display: block;
+      min-height: 1.3rem;
+      margin: 0.65rem 0 0;
+      color: var(--ink);
+      font-family: "Source Sans 3", "Segoe UI", sans-serif;
+      font-size: 0.86rem;
+    }
+
+    #detail strong {
+      color: var(--orange);
+      font-weight: 600;
+    }
+
+    footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.25rem 1.1rem;
+      width: min(72rem, calc(100% - 1.5rem));
+      margin: 0 auto 1.1rem;
+      padding-top: 0.7rem;
+      font-family: "Source Sans 3", "Segoe UI", sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    @media (max-width: 720px) {
+      h1 {
+        font-size: 1.45rem;
+      }
+
+      .graph-wrap,
+      #cy {
+        width: 100%;
+        min-height: 70vh;
+      }
+
+      .graph-wrap {
+        margin: 0.6rem 0;
+      }
+
+      #cy {
+        border-left: 0;
+        border-right: 0;
+      }
+
+      .masthead,
+      footer {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 1.1rem;
+        padding-right: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <h1>Career graph</h1>
+    <p class="lede">Companies and technologies, connected by roles.</p>
+    <div class="legend">
+      <span class="swatch"><i class="company"></i> Company</span>
+      <span class="swatch"><i class="tech"></i> Technology — larger means used in more roles</span>
+      <span class="hint">Click a node to highlight its neighbourhood. Click the background to reset.</span>
+    </div>
+    <p id="detail">Select a company or technology.</p>
+  </header>
+  <div class="graph-wrap">
+    <div id="cy" role="img" aria-label="Interactive graph of companies and technologies"></div>
+    <aside class="layout-panel">
+      <details open>
+        <summary>Layout</summary>
+        <label>
+          Spring length
+          <output for="idealEdgeLength" id="idealEdgeLength-out"></output>
+          <span>idealEdgeLength</span>
+          <input id="idealEdgeLength" type="range" min="20" max="280" step="1">
+        </label>
+        <label>
+          Repulsion
+          <output for="nodeRepulsion" id="nodeRepulsion-out"></output>
+          <span>nodeRepulsion</span>
+          <input id="nodeRepulsion" type="range" min="500" max="40000" step="100">
+        </label>
+        <label>
+          Gravity
+          <output for="gravity" id="gravity-out"></output>
+          <span>gravity</span>
+          <input id="gravity" type="range" min="0" max="2" step="0.05">
+        </label>
+        <label>
+          Node spacing
+          <output for="padding" id="padding-out"></output>
+          <span>padding</span>
+          <input id="padding" type="range" min="0" max="80" step="1">
+        </label>
+        <label>
+          Damping
+          <output for="coolingFactor" id="coolingFactor-out"></output>
+          <span>coolingFactor (cose has no damping)</span>
+          <input id="coolingFactor" type="range" min="0.8" max="0.999" step="0.001">
+        </label>
+        <button type="button" id="layout-reset">Reset</button>
+      </details>
+    </aside>
+  </div>
+  <footer>
+    <a href="../index.html">CV</a>
+    <a href="mailto:ilia.postolaki@gmail.com">ilia.postolaki@gmail.com</a>
+    <a href="https://www.linkedin.com/in/ilia-postolaki-63a211159">LinkedIn</a>
+    <a href="https://github.com/ipostolaki/">GitHub</a>
+  </footer>
+  <script>
+    const jobs = [
+      {
+        company: 'InvestEngine',
+        role: 'Tech Lead, Backend',
+        dates: 'Jul 2025 – Aug 2026',
+        stack: ['Python', 'Django', 'Celery', 'RabbitMQ', 'SQL', 'Pydantic', 'Redis', 'AWS', 'Docker', 'Kubernetes', 'Sentry', 'Grafana', 'Graylog', 'Retool', 'Metabase']
+      },
+      {
+        company: 'Metabolic',
+        role: 'Tech Lead, Backend',
+        dates: 'Mar 2022 – Feb 2025',
+        stack: ['Python', 'FastAPI', 'PostgreSQL', 'SQLAlchemy', 'Alembic', 'Google Cloud', 'Docker', 'Kubernetes', 'gRPC', 'Keycloak']
+      },
+      {
+        company: 'WeShareSolar',
+        role: 'Senior Backend Developer',
+        dates: 'May 2018 – Dec 2021',
+        stack: ['Python', 'Django', 'Wagtail', 'Celery', 'Redis', 'JavaScript', 'Ansible', 'AWS', 'DigitalOcean', 'PostgreSQL', 'OpenAPI', 'IoT']
+      },
+      {
+        company: 'Ginger Payments',
+        role: 'Software Team Lead',
+        dates: 'Dec 2016 – May 2018',
+        stack: ['Python', 'Flask', 'JavaScript', 'AWS', 'DynamoDB', 'Docker', 'microservices', 'Sentry', 'REST']
+      },
+      {
+        company: 'Oberliht NGO',
+        role: 'Full-stack contractor',
+        dates: 'May 2016 – Dec 2016',
+        stack: ['Python', 'Django', 'Wagtail', 'PostgreSQL', 'Docker', 'jQuery', 'HTML', 'CSS', 'Bootstrap']
+      },
+      {
+        company: 'NewStore',
+        role: 'Backend developer',
+        dates: 'Dec 2015 – May 2016',
+        stack: ['Python', 'Pyramid', 'Flask', 'asyncio', 'SQLAlchemy', 'Docker', 'JSON Schema', 'WebSocket', 'server-sent events']
+      },
+      {
+        company: 'Depositphotos',
+        role: 'Software developer / Team lead (iOS)',
+        dates: 'Aug 2013 – Nov 2014',
+        stack: ['Objective-C', 'Python', 'Node.js', 'MongoDB', 'Redis', 'REST']
+      }
+    ];
+
+    const extraTags = ['Nginx', 'uv', 'Poetry'];
+
+    const alias = {
+      'Django (DRF)': 'Django',
+      'Wagtail CMS': 'Wagtail'
+    };
+
+    function canon(name) {
+      return alias[name] || name;
+    }
+
+    const companyMeta = {};
+    const techDegree = {};
+    const companyNodes = [];
+    const edgeList = [];
+
+    jobs.forEach((job, i) => {
+      companyMeta[job.company] = job;
+      const n = job.stack.length;
+      companyNodes.push({
+        data: {
+          id: 'c:' + job.company,
+          label: job.company + '\n' + job.role,
+          kind: 'company',
+          role: job.role,
+          dates: job.dates,
+          degree: n,
+          size: 44
+        },
+        position: { x: 160, y: 70 + i * (520 / Math.max(jobs.length - 1, 1)) }
+      });
+      job.stack.forEach((raw) => {
+        const tech = canon(raw);
+        techDegree[tech] = (techDegree[tech] || 0) + 1;
+        edgeList.push({
+          data: {
+            id: 'e:' + job.company + ':' + tech,
+            source: 'c:' + job.company,
+            target: 't:' + tech,
+            role: job.role,
+            company: job.company
+          }
+        });
+      });
+    });
+
+    extraTags.forEach((tech) => {
+      if (techDegree[tech] === undefined) techDegree[tech] = 0;
+    });
+
+    const techNames = Object.keys(techDegree);
+    const techNodes = techNames.map((tech, i) => {
+      const degree = techDegree[tech];
+      const cols = 4;
+      return {
+        data: {
+          id: 't:' + tech,
+          label: tech,
+          kind: 'tech',
+          degree: degree,
+          size: 22 + degree * 4
+        },
+        position: {
+          x: 420 + (i % cols) * 130,
+          y: 40 + Math.floor(i / cols) * 48
+        }
+      };
+    });
+
+    const elements = companyNodes.concat(techNodes, edgeList);
+
+    const LAYOUT_DEFAULTS = {
+      idealEdgeLength: 110,
+      nodeRepulsion: 12000,
+      gravity: 0.35,
+      padding: 28,
+      coolingFactor: 0.99
+    };
+
+    const layoutControls = {
+      idealEdgeLength: { el: document.getElementById('idealEdgeLength'), out: document.getElementById('idealEdgeLength-out'), parse: Number },
+      nodeRepulsion: { el: document.getElementById('nodeRepulsion'), out: document.getElementById('nodeRepulsion-out'), parse: Number },
+      gravity: { el: document.getElementById('gravity'), out: document.getElementById('gravity-out'), parse: Number },
+      padding: { el: document.getElementById('padding'), out: document.getElementById('padding-out'), parse: Number },
+      coolingFactor: { el: document.getElementById('coolingFactor'), out: document.getElementById('coolingFactor-out'), parse: Number }
+    };
+
+    function formatParam(key, value) {
+      if (key === 'gravity' || key === 'coolingFactor') return Number(value).toFixed(key === 'gravity' ? 2 : 3);
+      return String(Math.round(value));
+    }
+
+    function readLayoutParams() {
+      const params = {};
+      Object.keys(layoutControls).forEach((key) => {
+        params[key] = layoutControls[key].parse(layoutControls[key].el.value);
+      });
+      return params;
+    }
+
+    function writeLayoutParams(params) {
+      Object.keys(layoutControls).forEach((key) => {
+        layoutControls[key].el.value = params[key];
+        layoutControls[key].out.value = formatParam(key, params[key]);
+      });
+    }
+
+    function coseOptions(params) {
+      return {
+        name: 'cose',
+        animate: false,
+        randomize: false,
+        nodeOverlap: 48,
+        edgeElasticity: 0.35,
+        numIter: 2500,
+        initialTemp: 200,
+        minTemp: 1,
+        idealEdgeLength: params.idealEdgeLength,
+        nodeRepulsion: params.nodeRepulsion,
+        gravity: params.gravity,
+        padding: params.padding,
+        coolingFactor: params.coolingFactor
+      };
+    }
+
+    let layoutRun = null;
+
+    function runLayout(params) {
+      if (layoutRun) layoutRun.stop();
+      layoutRun = cy.layout(coseOptions(params));
+      layoutRun.run();
+    }
+
+    writeLayoutParams(LAYOUT_DEFAULTS);
+
+    const cy = window.cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: elements,
+      minZoom: 0.4,
+      maxZoom: 2.4,
+      wheelSensitivity: 0.25,
+      layout: coseOptions(LAYOUT_DEFAULTS),
+      style: [
+        {
+          selector: 'node',
+          style: {
+            label: 'data(label)',
+            'text-wrap': 'wrap',
+            'text-max-width': 92,
+            'font-size': 11,
+            'font-family': 'Source Sans 3, Segoe UI, sans-serif',
+            'font-weight': 600,
+            'text-outline-width': 3,
+            'text-outline-color': '#fdf6e3',
+            'border-width': 1,
+            'border-color': 'rgb(7 54 66 / 22%)',
+            width: 'data(size)',
+            height: 'data(size)'
+          }
+        },
+        {
+          selector: 'node[kind = "company"]',
+          style: {
+            shape: 'round-rectangle',
+            'background-color': '#cb4b16',
+            color: '#fdf6e3',
+            'text-outline-width': 0,
+            'font-family': 'Fraunces, Georgia, serif',
+            'font-size': 12,
+            'font-weight': 500,
+            'text-valign': 'center',
+            'text-halign': 'center',
+            width: 176,
+            height: 62,
+            'text-max-width': 164,
+            'text-wrap': 'wrap',
+            'text-line-height': 1.15
+          }
+        },
+        {
+          selector: 'node[kind = "tech"]',
+          style: {
+            shape: 'ellipse',
+            'background-color': '#2aa198',
+            color: '#073642'
+          }
+        },
+        {
+          selector: 'node[kind = "tech"][degree = 0]',
+          style: {
+            'background-color': '#93a1a1',
+            opacity: 0.7
+          }
+        },
+        {
+          selector: 'edge',
+          style: {
+            width: 1.4,
+            'line-color': '#e2d9c2',
+            'curve-style': 'bezier',
+            opacity: 0.85
+          }
+        },
+        {
+          selector: '.faded',
+          style: { opacity: 0.12 }
+        },
+        {
+          selector: 'node.highlight',
+          style: {
+            'border-width': 3,
+            'border-color': '#b58900'
+          }
+        },
+        {
+          selector: 'edge.highlight',
+          style: {
+            width: 2.6,
+            'line-color': '#cb4b16',
+            opacity: 1
+          }
+        }
+      ]
+    });
+
+    const detail = document.getElementById('detail');
+
+    function reset() {
+      cy.elements().removeClass('faded highlight');
+      detail.textContent = 'Select a company or technology.';
+    }
+
+    function summarizeNode(node) {
+      if (node.data('kind') === 'company') {
+        const job = companyMeta[node.id().slice(2)];
+        return '<strong>' + job.company + '</strong> · ' + job.role + ' · ' + job.dates;
+      }
+      const degree = node.data('degree');
+      const roles = node.connectedEdges().map((e) => e.data('company') + ' (' + e.data('role') + ')');
+      const used = roles.length ? ' — ' + roles.join('; ') : ' — listed in tags, not tied to a role stack';
+      const n = degree + (degree === 1 ? ' role' : ' roles');
+      return '<strong>' + node.data('label') + '</strong> · ' + n + used;
+    }
+
+    cy.on('tap', 'node', function (evt) {
+      const node = evt.target;
+      const hood = node.closedNeighborhood();
+      cy.elements().addClass('faded').removeClass('highlight');
+      hood.removeClass('faded').addClass('highlight');
+      detail.innerHTML = summarizeNode(node);
+    });
+
+    cy.on('tap', function (evt) {
+      if (evt.target === cy) reset();
+    });
+
+    Object.keys(layoutControls).forEach((key) => {
+      layoutControls[key].el.addEventListener('input', function () {
+        const params = readLayoutParams();
+        layoutControls[key].out.value = formatParam(key, params[key]);
+        runLayout(params);
+      });
+    });
+
+    document.getElementById('layout-reset').addEventListener('click', function () {
+      writeLayoutParams(LAYOUT_DEFAULTS);
+      runLayout(LAYOUT_DEFAULTS);
+    });
+  </script>
+</body>
+</html>
