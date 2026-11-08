@@ -323,7 +323,8 @@ a:hover {
   border-top: 2px solid var(--yellow);
 }
 
-.block.personal h2 {
+.block.personal h2,
+.block.roles h2 {
   margin: 0 0 1rem;
   color: var(--orange);
   font-family: Fraunces, Georgia, serif;
